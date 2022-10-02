@@ -1,0 +1,25 @@
+.popup {
+    z-index: 999;
+    position: absolute;
+    top: 7.5%;
+    left: 22.5%;
+    width: 55%;
+    height: 70%;
+    color: white;
+    background-color: white;
+    border-radius: 5px;
+    padding: 1em;
+    padding-top: 0px;
+    font-family: Ubuntu, Verdana, Geneva, sans-serif;
+    background-image: url(../assets/earth_from_iss.jpg);
+}
+
+[hidden=true] {
+    display: none;
+}
+
+.close-btn {
+    margin-top: 1.25em;
+    border: 0;
+    font-weight: bold;
+}
