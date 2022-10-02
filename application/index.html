@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin=""/>
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Ubuntu" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.1/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.1/dist/leaflet.js" integrity="sha256-NDI0K41gVbWqfkkaHj15IzU7PtMoelkzyKp8TOaFQ3s=" crossorigin=""></script>
-    
+
     <script src="lib/heatmap.js"></script>
     <script src="lib/leaflet-heatmap.js"></script>
+
+    <script src="provider/cassipoe_provider.js"></script>
+    <script src="provider/radiation_provider.js"></script>
+
+    <link rel="stylesheet" href="event_information_popup/event_information_popup.css">
+    <script src="event_information_popup/event_information_popup.js" defer></script>
 
     <style>
         #map {
@@ -18,46 +27,31 @@
         }
     </style>
 </head>
+
 <body>
     <div id="map"></div>
+    <div id="event-information" class="popup" hidden="true">
+        <button onclick="hideEventInformation()" class="close-btn">x</button>
+        <h2></h2>
+        Vous trouverez ici toutes les magnifiques informations que Katherine trouvera sur la ionosphère!
+    </div>
 
     <script>
-        // const map = L.map('map').setView([51.505, -0.09], 13);
-        // L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        //     maxZoom: 19,
-        //     attribution: ''
-        // }).addTo(map);
-
-        var testData = {
-            max: 8,
-            data: [{lat: 24.6408, lng:46.7728, count: 3},{lat: 50.75, lng:-1.55, count: 1}]
-        };
-
         var cfg = {
-            // radius should be small ONLY if scaleRadius is true (or small radius is intended)
-            // if scaleRadius is false it will be the constant radius used in pixels
             "radius": 2,
             "maxOpacity": .8,
-            // scales the radius based on map zoom
             "scaleRadius": true,
-            // if set to false the heatmap uses the global maximum for colorization
-            // if activated: uses the data maximum within the current map boundaries
-            //   (there will always be a red spot with useLocalExtremas true)
             "useLocalExtrema": true,
-            // which field name in your data represents the latitude - default "lat"
             latField: 'lat',
-            // which field name in your data represents the longitude - default "lng"
             lngField: 'lng',
-            // which field name in your data represents the data value - default "value"
             valueField: 'count'
         };
-
 
         var baseLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: ''
         });
-        
+
         var heatmapLayer = new HeatmapOverlay(cfg);
 
         var map = new L.Map('map', {
@@ -66,7 +60,33 @@
             layers: [baseLayer, heatmapLayer]
         });
 
-        heatmapLayer.setData(testData);
+        const cassiopeEvents = getCassiopeEvents().filter(isInIonosphere);
+        const cassiopeEventsHeat = {
+            max: 1,
+            data: cassiopeEvents.map(
+                event => {
+                    return {
+                        lat: event.Latitude,
+                        lng: event.Longitude,
+                        value: 1
+                    };
+                }
+            )
+        };
+        heatmapLayer.setData(cassiopeEventsHeat);
+        cassiopeEvents.forEach(event => {
+            const marker = L.marker([event.Latitude, event.Longitude]).on('click', displayEventInfo);
+            marker.addTo(map);
+        });
+
+        function displayEventInfo(e) {
+            showEventInformation(e.latlng.lat, e.latlng.lng);
+        }
+
+        function isInIonosphere(event) {
+            return event.Altitude >= 48 && event.Altitude <= 965;
+        }
     </script>
 </body>
+
 </html>
